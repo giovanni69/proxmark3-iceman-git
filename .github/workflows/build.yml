@@ -16,7 +16,10 @@ jobs:
       - name: Install dependencies
         run: |
           pacman -Syu --noconfirm
-          pacman -S --noconfirm base-devel git sudo
+          pacman -S --noconfirm base-devel git sudo \
+          python python-bitarray python-pyaudio python-numpy \
+          libsndfile bluez bluez-libs gd qt5-base qt5-tools \
+          arm-none-eabi-gcc arm-none-eabi-newlib
 
       - name: Checkout repository
         uses: actions/checkout@v4
