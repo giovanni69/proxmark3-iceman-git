@@ -44,5 +44,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.get_pkgname.outputs.pkgname }}-${{ steps.get_pkgname.outputs.pkgver }}-${{ steps.get_pkgname.outputs.pkgrel }}
+          name: ${{ steps.get_pkgname.outputs.pkgname }}
           path: '*.pkg.tar.zst'
