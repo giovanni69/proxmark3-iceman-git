@@ -2,13 +2,12 @@ name: Build Proxmark3 Package
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # ogni giorno alle 05:00 UTC
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     container:
       image: archlinux:latest
 
@@ -17,9 +16,9 @@ jobs:
         run: |
           pacman -Syu --noconfirm
           pacman -S --noconfirm base-devel git sudo \
-          python python-bitarray python-pyaudio python-numpy \
-          libsndfile bluez bluez-libs gd qt5-base qt5-tools \
-          arm-none-eabi-gcc arm-none-eabi-newlib
+            python python-bitarray python-pyaudio python-numpy \
+            libsndfile bluez bluez-libs gd qt5-base qt5-tools \
+            arm-none-eabi-gcc arm-none-eabi-newlib
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,32 +29,20 @@ jobs:
           echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
           chown -R builder:builder .
 
-      - name: Check for existing package
-        id: pkgcheck
+      - name: Extract package name
+        id: get_pkgname
         run: |
-          sudo -u builder bash -c "makepkg --nobuild --nocolor --noprepare --skipchecksums --skippgpcheck"
-          pkgver=$(source ./PKGBUILD && echo ${pkgver})
-          pkgrel=$(source ./PKGBUILD && echo ${pkgrel})
-          pkgname=$(source ./PKGBUILD && echo ${pkgname})
-          arch=$(source ./PKGBUILD && echo ${arch[0]})
-          filename=${pkgname}-${pkgver}-${pkgrel}-${arch}.pkg.tar.zst
-          echo "Checking for $filename"
-          if [ -f "$filename" ]; then
-            echo "Package already exists: $filename"
-            echo "skip_build=true" >> $GITHUB_OUTPUT
-          else
-            echo "No existing package found"
-            echo "skip_build=false" >> $GITHUB_OUTPUT
-          fi
+          source ./PKGBUILD
+          echo "pkgname=$pkgname" >> $GITHUB_OUTPUT
+          echo "pkgver=$pkgver" >> $GITHUB_OUTPUT
+          echo "pkgrel=$pkgrel" >> $GITHUB_OUTPUT
 
       - name: Build package
-        if: steps.pkgcheck.outputs.skip_build == 'false'
         run: |
           sudo -u builder bash -c "makepkg -sf --noconfirm --clean --noprogressbar --nocolor --log --skipchecksums --skippgpcheck"
 
       - name: Upload artifact
-        if: steps.pkgcheck.outputs.skip_build == 'false'
         uses: actions/upload-artifact@v4
         with:
-          name: proxmark3-pkg
+          name: ${{ steps.get_pkgname.outputs.pkgname }}-${{ steps.get_pkgname.outputs.pkgver }}-${{ steps.get_pkgname.outputs.pkgrel }}
           path: '*.pkg.tar.zst'
