@@ -46,7 +46,7 @@ makedepends=('git'
 #   python-pip
 #   python-pipx
 #   )
-options=(!buildflags)
+options=('!buildflags' '!strip')
 provides=('proxmark3' 'proxmark3-iceman')
 conflicts=('proxmark3' 'proxmark3-iceman')
 replaces=($pkgname'-generic' $pkgname'-rdv4')
